@@ -1,0 +1,483 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE>Blackjack by Robert Rouse</TITLE>
+
+	<SCRIPT LANGUAGE="JavaScript">
+/* 
+CS316 program 1
+Author: Paul Piwowarski
+Date: 9/2014
+
+Example code to start Program 1
+*/
+//****************************** GLOBAL VARIABLES ***********************************************
+// DSIZE is size of deck: 52 for normal deck
+// Note: do not hardcode deck size. Use this variable
+// to simplify my (and your) testing
+var DSIZE = 52; // size of deck
+var card = new Array(DSIZE); // shuffled deck
+var cardstart = new Array(DSIZE); // starting deck in order
+var cc; // index into card array during play
+var dealpressed;    // deal button has been pressed
+var ran;
+var running1000 = false;
+var runningTotal;
+// Put other global variables here ***********************************************************************************************
+newdeal();   // start with new deal
+// newdeal
+// This is one way to create a shuffled deck
+// reshuffle the cards, put in card array
+// Preconditions:
+//	New Deal button pressed
+// Postconditions:
+//	Card array filled and shuffled
+function newdeal() {  
+	// cardstart is unshuffled 1,2,3....
+	// card 1 is ace of clubs (1.png)
+	// card 2 is ace of spades (2.png)
+    // card 52 is 2 of diamonds (52.png)
+    // create array of numbers 1 to 52
+	for (var i = 0; i < DSIZE;i++) {
+		cardstart[i] = i;    
+	}
+	// select card randomly from cardstart and put in card
+	var randcard; // randomly selected card 
+	for (var j = 0; j < DSIZE; j++) {
+		randcard = Math.round(Math.random() * (DSIZE - j - 1)); // choose card
+		card[j] = cardstart[randcard]; // store random card
+		cardstart.splice(randcard, 1); // pack array
+	}  
+	cc = 0;              // index into card array
+}
+
+// resetdata
+// reset all variables, screen fields to start fresh
+function resetdata() {
+	document.JForm.mystake.value = 0;
+	document.JForm.myresult.value = 0;
+	document.JForm.myscore.value = 0;
+	document.JForm.opscore.value = 0;
+	document.getElementById("dlcards").innerHTML = "";
+	document.getElementById("mycards").innerHTML = "";
+	document.getElementById("ckbox").checked = false;
+	document.getElementById("myhit").checked = false;
+	document.getElementById("mydouble").checked = false;
+	ran = false;
+	running1000 = false;
+	runningTotal = 0;
+	dealpressed = 0;
+	newdeal();
+}
+
+// calculate
+// calculate value of card
+// Preconditions:
+//	Card passed
+//	1 <= card <= 52
+// Postconditions:
+//	Card value returned
+function calculate(card) {
+var value; // numerical value of card
+	if (card <= 4) {    // ace
+		value = 11;
+		return value; 
+	}
+	if (card <= 20) {   // face card or 10
+		value = 10;
+		return value;
+	}
+	if (card <= 24) {  // 9, and so forth
+		value = 9;
+		return value;
+	}    
+	if (card <= 28) {
+		value = 8;
+		return value;
+	}      
+	if (card <= 32) {
+		value = 7;
+		return value;
+	}    
+	if (card <= 36) {
+		value = 6;
+		return value;
+	}    
+	if (card <= 40) {
+		value = 5;
+		return value;
+	}    
+	if (card <= 44) {
+		value = 4;
+		return value;
+	}    
+	if (card <= 48) {        
+		value = 3;
+		return value;
+	}   
+	value = 2;          // only 2 left
+	return value; 
+}
+
+  // getcard
+  // get card from cardstart, then remove from deck
+  function getcard() {
+    var card;
+    // One way to do this:
+    // Get a random number from 1 to size of
+    // remaining deck - cards in cardstart 
+    // See Math.random function
+    // return that card
+    // Delete card from cardstart array by using the
+    // slice function on arrays: 
+    // Get the array in front of the selected card
+    // Get the array after the card
+    // Put the two slices together and replace
+    // cardstart with it
+    return card;
+  }
+
+ // run100
+  // run 1000 times
+  function run1000() {
+    var count;
+	running1000 = true;
+    for (count=0;count<1000;count++) {
+		newdeal();  // start with shuffled deck
+		deal();		// then deal 
+		run();		// then run
+		if(count == 998){ running1000 = false;}
+    }  
+    alert("Run 1000 done");  // delete when run1000 coded
+    // when done, update the screen
+  }
+ 
+  // hit
+  // Determine whether to take one more card
+  // Preconditions:
+  //    m1 value of my first card
+  //    m2 value of my second card
+  //    d1 value of dealer first card
+  //    d2 value of dealer second card
+  // Postconditions:
+  //    returns true: take another card
+  //            false: do not take card
+  //    For the input cards (m1,m2,d1,d2):
+  //    ace  11
+  //    face card 10
+  //    all others their value 
+  function hit(m1,m2,d1,d2) {
+	var myScore = calculate(m1) + calculate(m2);
+	var opScore = calculate(d1) + calculate(d2);
+	if (myScore < opScore){ return true; }
+	else if(myScore < 17){ 
+		if(opScore + 10 <= myScore){ return false;}
+		return true;	
+	}
+    return false;
+  }
+
+// determine whether to double the bet
+// Preconditions:
+//    m1 value of my first card
+//    m2 value of my second card
+//    d1 value of dealer first card
+//    d2 value of dealer second card
+// Postconditions:
+//    returns 200 if bet doubled
+//            100 if not
+  function doublebet(m1,m2,d1,d2) {
+	var myScore = calculate(m1) + calculate(m2);
+	var opScore = calculate(d1) + calculate(d2);
+	if (myScore >= 19 && myScore > opScore){
+		return true;
+	}
+	return false;
+}
+
+// run
+// after deal, determine whether to take card or double bet
+// Preconditions:
+//	Deal button pressed
+// Postconditions:
+//	Game completed
+//	Results displayed 
+function run() {
+	if (ran){ //After run is clicked, do not allow again until deal is pressed
+		alert("Must deal a new hand before running again").
+		return
+	}
+	ran = true;
+	var bet = 100;
+	var myScore = parseInt(document.JForm.myscore.value);
+	var opScore = parseInt(document.JForm.opscore.value);
+	//if use checkboxes is checked
+	if (document.getElementById("ckbox").checked){
+		//if myhit is checked, draw card
+		if (document.getElementById("myhit").checked){
+			mycard3number = card[cc++] + 1;
+			var mycard3 = "<img src = '"+mycard3number+".png' />";
+			mycards = mycards + mycard3;
+			myScore = myScore + calculate(mycard3number);
+		}
+		//if double is checked, double bet
+		if (document.getElementById("mydouble").checked){
+			bet = 200;
+		}
+	}
+	else{
+		var splitArray = mycards.split("/>");
+		var index = splitArray.length-1;
+		var myCardsInHand = new Array(index);
+		for(var i=0; i<index; i++){
+			myCardsInHand[i] = splitArray[i].match(/\d+/);
+		}
+		var splitArray = dlcards.split("/>");
+		var index = splitArray.length-1;
+		var opCardsInHand = new Array(index);
+		for(var i=0; i<index; i++){
+			opCardsInHand[i] = splitArray[i].match(/\d+/);
+	}
+		checkHit = hit(myCardsInHand[0], myCardsInHand[1], opCardsInHand[0], opCardsInHand[1]);
+		if(checkHit == true){
+			mycard3number = card[cc++] + 1;
+			var mycard3 = "<img src = '"+mycard3number+".png' />";
+			mycards = mycards + mycard3;
+			myScore = myScore + calculate(mycard3number);
+		}
+		checkDouble = doublebet(myCardsInHand[0], myCardsInHand[1], opCardsInHand[0], opCardsInHand[1])
+		if(checkDouble == true){
+			bet = 200;
+		}
+	}
+		//Manage Ace point value for mycards
+	var splitArray = mycards.split("/>");
+	var index = splitArray.length-1;
+	var cardsInHand = new Array(index);
+	for(var i=0; i<index; i++){
+		cardsInHand[i] = splitArray[i].match(/\d+/);
+	}
+	var j = 0;
+	while (myScore > 21 && j<index){
+		if(cardsInHand[j] <= 4){
+			myScore = myScore - 10;
+		}
+		j++;
+	}
+	
+	//dealer's logic
+	if (opScore < 17){
+		dlcard3number = card[cc++] + 1;
+		var dlcard3 = "<img src = '"+dlcard3number+".png' />";
+		dlcards = dlcards + dlcard3;
+		opScore = opScore + calculate(dlcard3number);
+	}
+	//Manage Ace point value for dlcards
+	var splitArray = dlcards.split("/>");
+	var index = splitArray.length-1;
+	var cardsInHand = new Array(index);
+	for(var i=0; i<index; i++){
+		cardsInHand[i] = splitArray[i].match(/\d+/);
+	}
+	var j = 0;
+	while (opScore > 21 && j<index){
+		if(cardsInHand[j] <= 4){
+			opScore = opScore - 10;
+		}
+		j++;
+	}
+	//update scores
+	if (myScore > 21){
+		myScore = "BUST";
+		document.JForm.myresult.value = (-1) * bet;
+	}
+	else if(myScore > opScore){
+		document.JForm.myresult.value = bet;
+	}
+	else if(myScore == opScore){
+		document.JForm.myresult.value = 0;
+	}
+	else{
+		document.JForm.myresult.value = (-1) * bet;
+	}
+	if (opScore > 21){
+		opScore = "BUST";
+	}
+	document.JForm.myscore.value = myScore;
+	document.JForm.opscore.value = opScore;
+	document.JForm.mystake.value = parseInt(document.JForm.mystake.value) + parseInt(document.JForm.myresult.value);
+	//Update card display
+	document.getElementById("dlcards").innerHTML =dlcards; 
+	document.getElementById("mycards").innerHTML =mycards;
+}
+
+// deal
+// start by dealing 2 cards to opponent and you
+function deal() {
+	ran = false;
+	// deal cards and display data
+	dealpressed = 1; // deal button has been pressed
+	if (cc <= 46){
+		// draw two cards for each player
+		dlcard1number = card[cc++] + 1;
+		dlcard2number = card[cc++] + 1;
+		mycard1number = card[cc++] + 1;
+		mycard2number = card[cc++] + 1;
+		var dlcard1 = "<img src = '"+dlcard1number+".png' />";  
+		var dlcard2 = "<img src = '"+dlcard2number+".png' />";
+		dlcards = dlcard1 + dlcard2;
+		var mycard1 = "<img src = '"+mycard1number+".png' />";  
+		var mycard2 = "<img src = '"+mycard2number+".png' />";
+		mycards = mycard1 + mycard2;
+	}
+	else{
+		alert("Oops, out of cards. Click 'New Deal' to reshuffle.");
+	}
+
+    	//Update dealer/My score and reset the win/loss to 100
+    	document.JForm.opscore.value = calculate(dlcard1number) + calculate(dlcard2number);
+    	document.JForm.myscore.value = calculate(mycard1number) + calculate(mycard2number);
+		document.JForm.myresult.value = 100;
+    	// Display cards on screen
+    	document.getElementById("dlcards").innerHTML =dlcards; 
+    	document.getElementById("mycards").innerHTML =mycards;	
+}
+
+
+</SCRIPT>
+
+</HEAD>
+<BODY >
+<FORM NAME="JForm">
+	<CENTER>
+		<TABLE CELLPADDING=2 CELLSPACING=2 STYLE="page-break-before: always">
+			<TR>
+				<TH STYLE="border: none; padding: 0in">
+					<P>New deal</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in">
+					<P><INPUT TYPE=BUTTON VALUE="New Deal" STYLE="width: 1.08in; height: 0.4in" ONCLICK="newdeal();">
+										</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in">
+					<P>Reset</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in">
+					<P><INPUT TYPE=BUTTON VALUE="Reset" STYLE="width: 0.75in; height: 0.4in" ONCLICK="resetdata();">
+										</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in">
+					<P>Use checkboxes: 
+					</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in">
+					<P><INPUT TYPE=CHECKBOX NAME="ckbox" ID="ckbox"STYLE="width: 0.14in; height: 0.14in">
+										</P>
+				</TH>
+			</TR>
+			<TR>
+
+
+				<TH STYLE="border: none; padding: 0in">
+					<P>My hit: 
+					</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in">
+					<P><INPUT TYPE=CHECKBOX NAME="myhit" ID="myhit" STYLE="width: 0.14in; height: 0.14in">
+										</P>
+				</TH>
+				<TD COLSPAN=2 VALIGN=TOP STYLE="border: none; padding: 0in"></TD>
+			
+		
+
+				<TH STYLE="border: none; padding: 0in">
+					<P>My double bet: 
+					</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in">
+					<P><INPUT TYPE=CHECKBOX NAME="mydouble" ID="mydouble" STYLE="width: 0.14in; height: 0.14in">
+										</P>
+				</TH>
+				<TD COLSPAN=2 VALIGN=TOP STYLE="border: none; padding: 0in"></TD>
+			</tr>
+			<TR>
+				<TH STYLE="border: none; padding: 0in">
+					<P>Dealer score: 
+					</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in">
+					<P><INPUT TYPE=TEXT NAME="opscore" VALUE="0" SIZE=5 STYLE="width: 0.51in; height: 0.31in">
+										</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in">
+					<P>My score: 
+					</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in">
+					<P><INPUT TYPE=TEXT NAME="myscore" VALUE="0" SIZE=5 STYLE="width: 0.51in; height: 0.31in">
+										</P>
+				</TH>
+				<TD COLSPAN=2 VALIGN=TOP STYLE="border: none; padding: 0in"></TD>
+			</TR>
+			<TR>
+
+				<TH STYLE="border: none; padding: 0in">
+					<P>My win/loss: 
+					</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in">
+					<P><INPUT TYPE=TEXT NAME="myresult" VALUE="0" SIZE=5 STYLE="width: 0.51in; height: 0.31in">
+										</P>
+				</TH>
+				<TD COLSPAN=2 VALIGN=TOP STYLE="border: none; padding: 0in"></TD>
+		
+
+				<TH STYLE="border: none; padding: 0in">
+					<P>My total stake: 
+					</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in">
+					<P><INPUT TYPE=TEXT NAME="mystake" VALUE="0" SIZE=5 STYLE="width: 0.51in; height: 0.31in">
+										</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in"></TH>
+				<TD VALIGN=TOP STYLE="border: none; padding: 0in"></TD>
+			</TR>
+			<TR>
+				<TH STYLE="border: none; padding: 0in">
+					<P>Deal</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in">
+					<P><INPUT TYPE=BUTTON VALUE="Deal" STYLE="width: 0.64in; height: 0.4in" ONCLICK="deal();">
+										</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in">
+					<P>Run once</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in">
+					<P><INPUT TYPE=BUTTON VALUE="Run" STYLE="width: 0.59in; height: 0.4in" ONCLICK="run();">
+										</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in">
+					<P>Run 1000 times</P>
+				</TH>
+				<TH STYLE="border: none; padding: 0in">
+					<P><INPUT TYPE=BUTTON VALUE="Run" STYLE="width: 0.59in; height: 0.4in" ONCLICK="run1000();">
+										</P>
+				</TH>
+			</TR>
+		</TABLE>
+	</CENTER>
+</FORM>
+<H2 ALIGN=CENTER>Dealer's Cards</H2>
+<DIV ID="dlcards" ALIGN=CENTER> 
+	<H2  ALIGN=CENTER></H2>
+</DIV>
+<H2  ALIGN=CENTER> My Cards</H2>
+<DIV ID="mycards" ALIGN=CENTER >
+	<H2 CLASS="western" ALIGN=CENTER></H2>
+</DIV>
+
+</BODY>
+</HTML>
